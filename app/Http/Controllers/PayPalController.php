@@ -8,7 +8,8 @@ use Illuminate\Http\Request;
 class PayPalController extends Controller
 {
     /**
-     * @param Request $request
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
     public function getExpressCheckout(Request $request)
     {
