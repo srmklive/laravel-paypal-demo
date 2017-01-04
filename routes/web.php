@@ -11,8 +11,6 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
+Route::get('/', 'PayPalController@getIndex');
 Route::get('paypal/ec-checkout', 'PayPalController@getExpressCheckout');
+Route::get('paypal/ec-checkout-success', 'PayPalController@getExpressCheckoutSuccess');
