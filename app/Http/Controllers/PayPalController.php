@@ -107,7 +107,7 @@ class PayPalController extends Controller
 
         $order_id = Invoice::all()->count() + 1;
 
-        $data['invoice_id'] = 'PAYPAL_'.$order_id;
+        $data['invoice_id'] = 'PAYPALDEMOAPP_'.$order_id;
         $data['invoice_description'] = "Order #$order_id Invoice";
         $data['return_url'] = url('/paypal/ec-checkout-success');
         $data['cancel_url'] = url('/paypal/ec-checkout');
