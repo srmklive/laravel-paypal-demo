@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Invoice;
 use App\Item;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Srmklive\PayPal\Traits\IPNResponse;
 
 class PayPalController extends Controller
@@ -99,9 +98,10 @@ class PayPalController extends Controller
      */
     public function notify(Request $request)
     {
-        $response = $this->postNotify($request);
+        $request->merge(['cmd' => '_notify-validate']);
+        $post = $request->all();
 
-        Storage::disk('local')->put(storage_path('file.txt'), $response);
+        $response = $this->verifyIPN($post);
     }
 
     /**
