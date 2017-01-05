@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Invoice;
 use App\Item;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Srmklive\PayPal\Traits\IPNResponse;
 
 class PayPalController extends Controller
 {
+    use IPNResponse;
 
     public function getIndex(Request $request)
     {
@@ -89,6 +92,23 @@ class PayPalController extends Controller
         }
     }
 
+    /**
+     * Parse PayPal IPN.
+     *
+     * @param \Illuminate\Http\Request $request
+     */
+    public function notify(Request $request)
+    {
+        $response = $this->postNotify($request);
+
+        Storage::disk('local')->put(storage_path('file.txt'), $response);
+    }
+
+    /**
+     * Set cart data for processing payment on PayPal.
+     *
+     * @return array
+     */
     protected function getCheckoutData()
     {
         $data = [];
