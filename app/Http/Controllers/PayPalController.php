@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Invoice;
 use App\Item;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Srmklive\PayPal\Traits\IPNResponse;
 
 class PayPalController extends Controller
@@ -102,6 +104,9 @@ class PayPalController extends Controller
         $post = $request->all();
 
         $response = $this->verifyIPN($post);
+
+        $logFile = "ipn_log_".Carbon::now()->format("Ymd_His").".txt";
+        Storage::disk('local')->put($logFile, $response);
     }
 
     /**
