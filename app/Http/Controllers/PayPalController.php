@@ -30,7 +30,8 @@ class PayPalController extends Controller
     }
 
     /**
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
     public function getExpressCheckout(Request $request)
@@ -46,7 +47,8 @@ class PayPalController extends Controller
     /**
      * Process payment on PayPal.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\RedirectResponse
      */
     public function getExpressCheckoutSuccess(Request $request)
@@ -58,12 +60,12 @@ class PayPalController extends Controller
 
         // Verify Express Checkout Token
         $response = express_checkout()->getExpressCheckoutDetails($token);
-        if(in_array(strtoupper($response['ACK']), ['SUCCESS','SUCCESSWITHWARNING'])) {
+        if (in_array(strtoupper($response['ACK']), ['SUCCESS', 'SUCCESSWITHWARNING'])) {
             // Perform transaction on PayPal
             $payment_status = express_checkout()->doExpressCheckoutPayment($cart, $token, $PayerID);
             $status = $payment_status['PAYMENTINFO_0_PAYMENTSTATUS'];
 
-            $invoice = new Invoice;
+            $invoice = new Invoice();
             $invoice->title = $cart['invoice_description'];
             $invoice->price = $cart['total'];
             if (!strcasecmp($status, 'Completed') || !strcasecmp($status, 'Processed')) {
@@ -73,8 +75,8 @@ class PayPalController extends Controller
             }
             $invoice->save();
 
-            collect($cart['items'])->each(function($product) use($invoice) {
-                $item = new Item;
+            collect($cart['items'])->each(function ($product) use ($invoice) {
+                $item = new Item();
                 $item->invoice_id = $invoice->id;
                 $item->item_name = $product['name'];
                 $item->item_price = $product['price'];
@@ -84,9 +86,9 @@ class PayPalController extends Controller
             });
 
             if ($invoice->paid) {
-                session()->put(["code" => "success", "message" => "Order $invoice->id has been paid successfully!"]);
+                session()->put(['code' => 'success', 'message' => "Order $invoice->id has been paid successfully!"]);
             } else {
-                session()->put(["code" => "danger", "message" => "Error processing PayPal payment for Order $invoice->id!"]);
+                session()->put(['code' => 'danger', 'message' => "Error processing PayPal payment for Order $invoice->id!"]);
             }
 
             return redirect('/');
@@ -105,7 +107,7 @@ class PayPalController extends Controller
 
         $response = $this->verifyIPN($post);
 
-        $logFile = "ipn_log_".Carbon::now()->format("Ymd_His").".txt";
+        $logFile = 'ipn_log_'.Carbon::now()->format('Ymd_His').'.txt';
         Storage::disk('local')->put($logFile, $response);
     }
 
@@ -119,15 +121,15 @@ class PayPalController extends Controller
         $data = [];
         $data['items'] = [
             [
-                'name' => 'Product 1',
+                'name'  => 'Product 1',
                 'price' => 9.99,
-                'qty' => 1
+                'qty'   => 1,
             ],
             [
-                'name' => 'Product 2',
+                'name'  => 'Product 2',
                 'price' => 4.99,
-                'qty' => 2
-            ]
+                'qty'   => 2,
+            ],
         ];
 
         $order_id = Invoice::all()->count() + 1;
@@ -138,8 +140,8 @@ class PayPalController extends Controller
         $data['cancel_url'] = url('/paypal/ec-checkout');
 
         $total = 0;
-        foreach($data['items'] as $item) {
-            $total += $item['price']*$item['qty'];
+        foreach ($data['items'] as $item) {
+            $total += $item['price'] * $item['qty'];
         }
 
         $data['total'] = $total;
