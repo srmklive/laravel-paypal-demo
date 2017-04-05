@@ -69,16 +69,16 @@ class PayPalController extends Controller
 
                 $data = [
                     'PROFILESTARTDATE' => $startdate,
-                    'DESC' => $cart['subscription_desc'],
-                    'BILLINGPERIOD' => 'Month',
+                    'DESC'             => $cart['subscription_desc'],
+                    'BILLINGPERIOD'    => 'Month',
                     'BILLINGFREQUENCY' => 12,
-                    'AMT' => 9.99,
-                    'INITAMT' => 9.99,
-                    'CURRENCYCODE' => 'USD'
+                    'AMT'              => 9.99,
+                    'INITAMT'          => 9.99,
+                    'CURRENCYCODE'     => 'USD',
                 ];
 
                 $response = express_checkout()->createRecurringPaymentsProfile($data, $response['TOKEN']);
-                if(!empty($response['PROFILESTATUS']) && in_array($response['PROFILESTATUS'], ['ActiveProfile','PendingProfile'])) {
+                if (!empty($response['PROFILESTATUS']) && in_array($response['PROFILESTATUS'], ['ActiveProfile', 'PendingProfile'])) {
                     $status = 'Processed';
                 } else {
                     $status = 'Invalid';
@@ -151,14 +151,14 @@ class PayPalController extends Controller
         if ($recurring === true) {
             $data['items'] = [
                 [
-                    'name'  => "Monthly Subscription PAYPALDEMO #".$order_id,
+                    'name'  => 'Monthly Subscription PAYPALDEMO #'.$order_id,
                     'price' => 0,
                     'qty'   => 1,
                 ],
             ];
 
             $data['return_url'] = url('/paypal/ec-checkout-success?mode=recurring');
-            $data['subscription_desc'] = "Monthly Subscription PAYPALDEMO #".$order_id;
+            $data['subscription_desc'] = 'Monthly Subscription PAYPALDEMO #'.$order_id;
         } else {
             $data['items'] = [
                 [
