@@ -36,9 +36,10 @@ class PayPalController extends Controller
      */
     public function getExpressCheckout(Request $request)
     {
-        $cart = $this->getCheckoutData();
+        $recurring = ($request->get('mode') === 'recurring') ? true : false;
+        $cart = $this->getCheckoutData($recurring);
 
-        $response = express_checkout()->setExpressCheckout($cart);
+        $response = express_checkout()->setExpressCheckout($cart, $recurring);
         if (!empty($response['paypal_link'])) {
             return redirect($response['paypal_link']);
         }
@@ -53,17 +54,40 @@ class PayPalController extends Controller
      */
     public function getExpressCheckoutSuccess(Request $request)
     {
+        $recurring = ($request->get('mode') === 'recurring') ? true : false;
         $token = $request->get('token');
         $PayerID = $request->get('PayerID');
 
-        $cart = $this->getCheckoutData();
+        $cart = $this->getCheckoutData($recurring);
 
         // Verify Express Checkout Token
         $response = express_checkout()->getExpressCheckoutDetails($token);
+
         if (in_array(strtoupper($response['ACK']), ['SUCCESS', 'SUCCESSWITHWARNING'])) {
-            // Perform transaction on PayPal
-            $payment_status = express_checkout()->doExpressCheckoutPayment($cart, $token, $PayerID);
-            $status = $payment_status['PAYMENTINFO_0_PAYMENTSTATUS'];
+            if ($recurring === true) {
+                $startdate = Carbon::now()->addMonth()->toAtomString();
+
+                $data = [
+                    'PROFILESTARTDATE' => $startdate,
+                    'DESC' => $cart['subscription_desc'],
+                    'BILLINGPERIOD' => 'Month',
+                    'BILLINGFREQUENCY' => 12,
+                    'AMT' => 9.99,
+                    'INITAMT' => 9.99,
+                    'CURRENCYCODE' => 'USD'
+                ];
+
+                $response = express_checkout()->createRecurringPaymentsProfile($data, $response['TOKEN']);
+                if(!empty($response['PROFILESTATUS']) && in_array($response['PROFILESTATUS'], ['ActiveProfile','PendingProfile'])) {
+                    $status = 'Processed';
+                } else {
+                    $status = 'Invalid';
+                }
+            } else {
+                // Perform transaction on PayPal
+                $payment_status = express_checkout()->doExpressCheckoutPayment($cart, $token, $PayerID);
+                $status = $payment_status['PAYMENTINFO_0_PAYMENTSTATUS'];
+            }
 
             $invoice = new Invoice();
             $invoice->title = $cart['invoice_description'];
@@ -114,30 +138,47 @@ class PayPalController extends Controller
     /**
      * Set cart data for processing payment on PayPal.
      *
+     * @param bool $recurring
+     *
      * @return array
      */
-    protected function getCheckoutData()
+    protected function getCheckoutData($recurring = false)
     {
         $data = [];
-        $data['items'] = [
-            [
-                'name'  => 'Product 1',
-                'price' => 9.99,
-                'qty'   => 1,
-            ],
-            [
-                'name'  => 'Product 2',
-                'price' => 4.99,
-                'qty'   => 2,
-            ],
-        ];
 
-        $order_id = Invoice::all()->count() + 1;
+        $order_id = Invoice::all()->count() + 4;
+
+        if ($recurring === true) {
+            $data['items'] = [
+                [
+                    'name'  => "Monthly Subscription PAYPALDEMO #".$order_id,
+                    'price' => 0,
+                    'qty'   => 1,
+                ],
+            ];
+
+            $data['return_url'] = url('/paypal/ec-checkout-success?mode=recurring');
+            $data['subscription_desc'] = "Monthly Subscription PAYPALDEMO #".$order_id;
+        } else {
+            $data['items'] = [
+                [
+                    'name'  => 'Product 1',
+                    'price' => 9.99,
+                    'qty'   => 1,
+                ],
+                [
+                    'name'  => 'Product 2',
+                    'price' => 4.99,
+                    'qty'   => 2,
+                ],
+            ];
+
+            $data['return_url'] = url('/paypal/ec-checkout-success');
+        }
 
         $data['invoice_id'] = 'PAYPALDEMOAPP_'.$order_id;
         $data['invoice_description'] = "Order #$order_id Invoice";
-        $data['return_url'] = url('/paypal/ec-checkout-success');
-        $data['cancel_url'] = url('/paypal/ec-checkout');
+        $data['cancel_url'] = url('/');
 
         $total = 0;
         foreach ($data['items'] as $item) {
