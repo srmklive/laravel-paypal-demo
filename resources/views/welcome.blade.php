@@ -14,6 +14,7 @@
                     <div class="panel-body">
                         <ul>
                             <li><a href="{{url('paypal/ec-checkout')}}">Express Checkout</a></li>
+                            <li><a href="{{url('paypal/ec-checkout?mode=recurring')}}">Create Recurring Payments Profile</a></li>
                         </ul>
                     </div>
                 </div>
