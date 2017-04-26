@@ -134,19 +134,19 @@ class PayPalController extends Controller
     {
         $data = [];
 
-        $order_id = Invoice::all()->count() + 4;
+        $order_id = Invoice::all()->count() + 1;
 
         if ($recurring === true) {
             $data['items'] = [
                 [
-                    'name'  => 'Monthly Subscription PAYPALDEMO #'.$order_id,
+                    'name'  => 'Monthly Subscription PAYPALDEMOAPP #'.$order_id,
                     'price' => 0,
                     'qty'   => 1,
                 ],
             ];
 
             $data['return_url'] = url('/paypal/ec-checkout-success?mode=recurring');
-            $data['subscription_desc'] = 'Monthly Subscription PAYPALDEMO #'.$order_id;
+            $data['subscription_desc'] = 'Monthly Subscription PAYPALDEMOAPP #'.$order_id;
         } else {
             $data['items'] = [
                 [
