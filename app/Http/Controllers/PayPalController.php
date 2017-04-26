@@ -66,7 +66,7 @@ class PayPalController extends Controller
         if (in_array(strtoupper($response['ACK']), ['SUCCESS', 'SUCCESSWITHWARNING'])) {
             if ($recurring === true) {
                 $response = express_checkout()->createMonthlySubscription($response['TOKEN'], 9.99, $cart['subscription_desc']);
-                if(!empty($response['PROFILESTATUS']) && in_array($response['PROFILESTATUS'], ['ActiveProfile','PendingProfile'])) {
+                if (!empty($response['PROFILESTATUS']) && in_array($response['PROFILESTATUS'], ['ActiveProfile', 'PendingProfile'])) {
                     $status = 'Processed';
                 } else {
                     $status = 'Invalid';
