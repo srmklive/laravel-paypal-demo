@@ -139,14 +139,14 @@ class PayPalController extends Controller
         if ($recurring === true) {
             $data['items'] = [
                 [
-                    'name'  => 'Monthly Subscription PAYPALDEMOAPP #'.$order_id,
+                    'name'  => 'Monthly Subscription '.config('paypal.invoice_prefix').' #'.$order_id,
                     'price' => 0,
                     'qty'   => 1,
                 ],
             ];
 
             $data['return_url'] = url('/paypal/ec-checkout-success?mode=recurring');
-            $data['subscription_desc'] = 'Monthly Subscription PAYPALDEMOAPP #'.$order_id;
+            $data['subscription_desc'] = 'Monthly Subscription '.config('paypal.invoice_prefix').' #'.$order_id;
         } else {
             $data['items'] = [
                 [
@@ -164,7 +164,7 @@ class PayPalController extends Controller
             $data['return_url'] = url('/paypal/ec-checkout-success');
         }
 
-        $data['invoice_id'] = 'PAYPALDEMOAPP_'.$order_id;
+        $data['invoice_id'] = config('paypal.invoice_prefix').'_'.$order_id;
         $data['invoice_description'] = "Order #$order_id Invoice";
         $data['cancel_url'] = url('/');
 
