@@ -39,9 +39,14 @@ class PayPalController extends Controller
         $recurring = ($request->get('mode') === 'recurring') ? true : false;
         $cart = $this->getCheckoutData($recurring);
 
-        $response = express_checkout()->setExpressCheckout($cart, $recurring);
-        if (!empty($response['paypal_link'])) {
+        try {
+            $response = express_checkout()->setExpressCheckout($cart, $recurring);
+
             return redirect($response['paypal_link']);
+        } catch (\Exception $e) {
+            $invoice = $this->createInvoice($cart, 'Invalid');
+
+            session()->put(['code' => 'danger', 'message' => "Error processing PayPal payment for Order $invoice->id!"]);
         }
     }
 
@@ -77,25 +82,7 @@ class PayPalController extends Controller
                 $status = $payment_status['PAYMENTINFO_0_PAYMENTSTATUS'];
             }
 
-            $invoice = new Invoice();
-            $invoice->title = $cart['invoice_description'];
-            $invoice->price = $cart['total'];
-            if (!strcasecmp($status, 'Completed') || !strcasecmp($status, 'Processed')) {
-                $invoice->paid = 1;
-            } else {
-                $invoice->paid = 0;
-            }
-            $invoice->save();
-
-            collect($cart['items'])->each(function ($product) use ($invoice) {
-                $item = new Item();
-                $item->invoice_id = $invoice->id;
-                $item->item_name = $product['name'];
-                $item->item_price = $product['price'];
-                $item->item_qty = $product['qty'];
-
-                $item->save();
-            });
+            $invoice = $this->createInvoice($cart, $status);
 
             if ($invoice->paid) {
                 session()->put(['code' => 'success', 'message' => "Order $invoice->id has been paid successfully!"]);
@@ -176,5 +163,38 @@ class PayPalController extends Controller
         $data['total'] = $total;
 
         return $data;
+    }
+
+    /**
+     * Create invoice.
+     *
+     * @param array  $cart
+     * @param string $status
+     *
+     * @return \App\Invoice
+     */
+    protected function createInvoice($cart, $status)
+    {
+        $invoice = new Invoice();
+        $invoice->title = $cart['invoice_description'];
+        $invoice->price = $cart['total'];
+        if (!strcasecmp($status, 'Completed') || !strcasecmp($status, 'Processed')) {
+            $invoice->paid = 1;
+        } else {
+            $invoice->paid = 0;
+        }
+        $invoice->save();
+
+        collect($cart['items'])->each(function ($product) use ($invoice) {
+            $item = new Item();
+            $item->invoice_id = $invoice->id;
+            $item->item_name = $product['name'];
+            $item->item_price = $product['price'];
+            $item->item_qty = $product['qty'];
+
+            $item->save();
+        });
+
+        return $invoice;
     }
 }
