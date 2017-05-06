@@ -104,7 +104,7 @@ class PayPalController extends Controller
         $request->merge(['cmd' => '_notify-validate']);
         $post = $request->all();
 
-        $response = $this->verifyIPN($post);
+        $response = (string) express_checkout()->verifyIPN($post);
 
         $logFile = 'ipn_log_'.Carbon::now()->format('Ymd_His').'.txt';
         Storage::disk('local')->put($logFile, $response);
