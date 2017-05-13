@@ -7,11 +7,23 @@ use App\Item;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Srmklive\PayPal\Services\AdaptivePayments;
+use Srmklive\PayPal\Services\ExpressCheckout;
 use Srmklive\PayPal\Traits\IPNResponse;
 
 class PayPalController extends Controller
 {
     use IPNResponse;
+
+    /**
+     * @var ExpressCheckout
+     */
+    protected $provider;
+
+    public function __construct()
+    {
+        $this->provider = new ExpressCheckout;
+    }
 
     public function getIndex(Request $request)
     {
@@ -40,7 +52,7 @@ class PayPalController extends Controller
         $cart = $this->getCheckoutData($recurring);
 
         try {
-            $response = express_checkout()->setExpressCheckout($cart, $recurring);
+            $response = $this->provider->setExpressCheckout($cart, $recurring);
 
             return redirect($response['paypal_link']);
         } catch (\Exception $e) {
@@ -66,11 +78,11 @@ class PayPalController extends Controller
         $cart = $this->getCheckoutData($recurring);
 
         // Verify Express Checkout Token
-        $response = express_checkout()->getExpressCheckoutDetails($token);
+        $response = $this->provider->getExpressCheckoutDetails($token);
 
         if (in_array(strtoupper($response['ACK']), ['SUCCESS', 'SUCCESSWITHWARNING'])) {
             if ($recurring === true) {
-                $response = express_checkout()->createMonthlySubscription($response['TOKEN'], 9.99, $cart['subscription_desc']);
+                $response = $this->provider->createMonthlySubscription($response['TOKEN'], 9.99, $cart['subscription_desc']);
                 if (!empty($response['PROFILESTATUS']) && in_array($response['PROFILESTATUS'], ['ActiveProfile', 'PendingProfile'])) {
                     $status = 'Processed';
                 } else {
@@ -78,7 +90,7 @@ class PayPalController extends Controller
                 }
             } else {
                 // Perform transaction on PayPal
-                $payment_status = express_checkout()->doExpressCheckoutPayment($cart, $token, $PayerID);
+                $payment_status = $this->provider->doExpressCheckoutPayment($cart, $token, $PayerID);
                 $status = $payment_status['PAYMENTINFO_0_PAYMENTSTATUS'];
             }
 
@@ -94,6 +106,32 @@ class PayPalController extends Controller
         }
     }
 
+    public function getAdaptivePay()
+    {
+        $this->provider = new AdaptivePayments;
+
+        $data = [
+            'receivers'  => [
+                [
+                    'email' => 'johndoe@example.com',
+                    'amount' => 10,
+                    'primary' => true,
+                ],
+                [
+                    'email' => 'janedoe@example.com',
+                    'amount' => 5,
+                    'primary' => false
+                ]
+            ],
+            'payer' => 'EACHRECEIVER', // (Optional) Describes who pays PayPal fees. Allowed values are: 'SENDER', 'PRIMARYRECEIVER', 'EACHRECEIVER' (Default), 'SECONDARYONLY'
+            'return_url' => url('payment/success'),
+            'cancel_url' => url('payment/cancel'),
+        ];
+
+        $response = $this->provider->createPayRequest($data);
+        dd($response);
+    }
+
     /**
      * Parse PayPal IPN.
      *
@@ -104,7 +142,7 @@ class PayPalController extends Controller
         $request->merge(['cmd' => '_notify-validate']);
         $post = $request->all();
 
-        $response = (string) express_checkout()->verifyIPN($post);
+        $response = (string) $this->provider->verifyIPN($post);
 
         $logFile = 'ipn_log_'.Carbon::now()->format('Ymd_His').'.txt';
         Storage::disk('local')->put($logFile, $response);

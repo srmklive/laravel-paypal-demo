@@ -14,4 +14,5 @@
 Route::get('/', 'PayPalController@getIndex');
 Route::get('paypal/ec-checkout', 'PayPalController@getExpressCheckout');
 Route::get('paypal/ec-checkout-success', 'PayPalController@getExpressCheckoutSuccess');
+Route::get('paypal/adaptive-pay', 'PayPalController@getAdaptivePay');
 Route::post('paypal/notify', 'PayPalController@notify');
