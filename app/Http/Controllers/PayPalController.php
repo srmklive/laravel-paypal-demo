@@ -22,7 +22,7 @@ class PayPalController extends Controller
 
     public function __construct()
     {
-        $this->provider = new ExpressCheckout;
+        $this->provider = new ExpressCheckout();
     }
 
     public function getIndex(Request $request)
@@ -108,22 +108,22 @@ class PayPalController extends Controller
 
     public function getAdaptivePay()
     {
-        $this->provider = new AdaptivePayments;
+        $this->provider = new AdaptivePayments();
 
         $data = [
             'receivers'  => [
                 [
-                    'email' => 'johndoe@example.com',
-                    'amount' => 10,
+                    'email'   => 'johndoe@example.com',
+                    'amount'  => 10,
                     'primary' => true,
                 ],
                 [
-                    'email' => 'janedoe@example.com',
-                    'amount' => 5,
-                    'primary' => false
-                ]
+                    'email'   => 'janedoe@example.com',
+                    'amount'  => 5,
+                    'primary' => false,
+                ],
             ],
-            'payer' => 'EACHRECEIVER', // (Optional) Describes who pays PayPal fees. Allowed values are: 'SENDER', 'PRIMARYRECEIVER', 'EACHRECEIVER' (Default), 'SECONDARYONLY'
+            'payer'      => 'EACHRECEIVER', // (Optional) Describes who pays PayPal fees. Allowed values are: 'SENDER', 'PRIMARYRECEIVER', 'EACHRECEIVER' (Default), 'SECONDARYONLY'
             'return_url' => url('payment/success'),
             'cancel_url' => url('payment/cancel'),
         ];
