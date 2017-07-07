@@ -9,12 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Srmklive\PayPal\Services\AdaptivePayments;
 use Srmklive\PayPal\Services\ExpressCheckout;
-use Srmklive\PayPal\Traits\IPNResponse;
 
 class PayPalController extends Controller
 {
-    use IPNResponse;
-
     /**
      * @var ExpressCheckout
      */
@@ -139,6 +136,10 @@ class PayPalController extends Controller
      */
     public function notify(Request $request)
     {
+        if (!($this->provider instanceof ExpressCheckout)) {
+            $this->provider = new ExpressCheckout();
+        }
+
         $request->merge(['cmd' => '_notify-validate']);
         $post = $request->all();
 
