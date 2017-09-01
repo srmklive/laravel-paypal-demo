@@ -17,7 +17,7 @@ class CreateItemsTable extends Migration
             $table->increments('id');
             $table->integer('invoice_id')->unsigned();
             $table->string('item_name');
-            $table->decimal('item_price', 2);
+            $table->double('item_price', 2);
             $table->integer('item_qty');
             $table->timestamps();
 
