@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Srmklive\PayPal\Services\AdaptivePayments;
 use Srmklive\PayPal\Services\ExpressCheckout;
+use App\IPNStatus;
 
 class PayPalController extends Controller
 {
@@ -145,8 +146,10 @@ class PayPalController extends Controller
 
         $response = (string) $this->provider->verifyIPN($post);
 
-        $logFile = 'ipn_log_'.Carbon::now()->format('Ymd_His').'.txt';
-        Storage::disk('local')->put($logFile, $response);
+        $ipn = new IPNStatus();
+        $ipn->payload = json_encode($post);
+        $ipn->status = $response;
+        $ipn->save();            
     }
 
     /**
