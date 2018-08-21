@@ -141,8 +141,13 @@ class PayPalController extends Controller
             $this->provider = new ExpressCheckout();
         }
 
-        $request->merge(['cmd' => '_notify-validate']);
-        $post = $request->all();
+        $post = [
+            'cmd' => '_notify-validate'
+        ];
+        $data = $request->all();
+        foreach ($data as $key => $value) {
+            $post[$key] = $value;
+        }
 
         $response = (string) $this->provider->verifyIPN($post);
 
