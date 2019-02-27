@@ -3,13 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Invoice;
+use App\IPNStatus;
 use App\Item;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Srmklive\PayPal\Services\AdaptivePayments;
 use Srmklive\PayPal\Services\ExpressCheckout;
-use App\IPNStatus;
 
 class PayPalController extends Controller
 {
@@ -142,7 +140,7 @@ class PayPalController extends Controller
         }
 
         $post = [
-            'cmd' => '_notify-validate'
+            'cmd' => '_notify-validate',
         ];
         $data = $request->all();
         foreach ($data as $key => $value) {
@@ -154,7 +152,7 @@ class PayPalController extends Controller
         $ipn = new IPNStatus();
         $ipn->payload = json_encode($post);
         $ipn->status = $response;
-        $ipn->save();            
+        $ipn->save();
     }
 
     /**

@@ -11,6 +11,6 @@ class IPNStatus extends Model
 
     protected $fillable = [
         'payload',
-        'status'
+        'status',
     ];
 }
