@@ -13,6 +13,7 @@
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^6.3.1|^7.0.1",
         "laravel/framework": "^7.29",
+        "laravel/helpers": "^1.4",
         "laravel/tinker": "^2.5",
         "srmklive/paypal": "~1.0"
     },
